@@ -1,0 +1,9 @@
+extern "C" func malloc(size: usize) -> *u8;
+extern "C" func printf(s: str, ...) -> i32;
+
+func main() -> i32 {
+    printf("memory: i am free.\n");
+    printf("dirty mem %d\n", *malloc(32usize));
+
+    0i32
+}
