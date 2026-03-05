@@ -22,6 +22,7 @@ pub fn convert_type_to_cranelift_type(ty: &Ty) -> types::Type {
         Ty::AppliedGeneric(..) => platform_width_to_int_type(),
         Ty::Str => platform_width_to_int_type(),
         Ty::Function { .. } => platform_width_to_int_type(), // 以函数指针处理
+        Ty::Ptr(_) => platform_width_to_int_type(),
         Ty::Unit => types::I8,
         _ => todo!("impl ty {ty}"),
     }
