@@ -26,6 +26,7 @@ impl NeedGc for Ty {
             Ty::BigInt => true,
             Ty::Function { .. } => false,
             Ty::Struct { .. } => true,
+            Ty::Ptr(_) => false,
             Ty::Infer(_) => false,
             Ty::Generic(_, _) => false,
             Ty::AppliedGeneric(_, _) => false,
