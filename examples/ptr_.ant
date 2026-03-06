@@ -9,5 +9,11 @@ func main() -> i32 {
     printf("dirty mem ptr %p\n", ptr);
     printf("dirty mem val %d\n", *ptr);
 
+    *ptr = 91u8;
+
+    printf("val %d\n", *ptr);
+    printf("val %d\n", *ptr);
+    printf("val %d\n", *ptr);
+
     0i32
 }
