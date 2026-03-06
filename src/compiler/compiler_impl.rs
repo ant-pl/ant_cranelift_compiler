@@ -1237,8 +1237,53 @@ impl<'a> Compiler<'a> {
                     }
 
                     return Ok(new_val);
+                } else if let TypedExpression::Prefix {
+                    op,
+                    right: ptr_expr_id,
+                    ..
+                } = left
+                {
+                    if op.as_ref() == "*" {
+                        // 编译指针所在的表达式, 得到内存地址
+                        let ptr_val = state.get_expr_ref(ptr_expr_id).clone();
+                        let addr_val = Self::compile_expr(state, &ptr_val)?;
+
+                        // 获取新值的类型, 以便正确 retain/release
+                        let val_ty = state.tcx().get(right.get_type()).clone();
+
+                        let new_val = Self::compile_expr(state, &right)?;
+
+                        // 处理引用计数
+                        if val_ty.need_gc() {
+                            // 加载旧值用于 release
+                            let cranelift_ty = convert_type_to_cranelift_type(&val_ty);
+                            let old_val = state.builder.ins().load(
+                                cranelift_ty,
+                                MemFlags::new(),
+                                addr_val,
+                                0,
+                            );
+
+                            state.retain_if_needed(new_val, &val_ty);
+                            state
+                                .builder
+                                .ins()
+                                .store(MemFlags::new(), new_val, addr_val, 0);
+                            state.release_if_needed(old_val, &val_ty);
+                        } else {
+                            // 普通类型直接 store
+                            state
+                                .builder
+                                .ins()
+                                .store(MemFlags::new(), new_val, addr_val, 0);
+                        }
+
+                        return Ok(new_val);
+                    }
+
+                    todo!()
                 } else {
-                    return Err("assign target must be ident or field".into());
+                    return Err("assign target must be ident or field or ptr".into());
                 };
             }
 
@@ -1551,11 +1596,11 @@ impl<'a> Compiler<'a> {
 
                     // 3. 执行 load 操作
                     return Ok(state.builder.ins().load(
-                        cranelift_ty, // 读取出来的数据类型
+                        cranelift_ty,    // 读取出来的数据类型
                         MemFlags::new(), // 内存标记
-                        ptr_val, // 地址 Value
-                        0, // 偏移量（通常为 0）
-                    ))
+                        ptr_val,         // 地址 Value
+                        0,               // 偏移量（通常为 0）
+                    ));
                 }
 
                 todo!("todo op {op}")
