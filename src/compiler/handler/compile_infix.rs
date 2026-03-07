@@ -7,7 +7,9 @@ use ant_type_checker::{
 };
 use cranelift::prelude::{InstBuilder, IntCC, Value, types};
 
-use crate::compiler::{CompileResult, Compiler, FunctionState};
+use crate::compiler::{
+    CompileResult, Compiler, FunctionState, get_platform_width, imm::platform_width_to_int_type,
+};
 
 macro_rules! four_fundamental_operations {
     ($op:ident) => {
@@ -27,7 +29,11 @@ macro_rules! const_eval_op {
     };
 }
 
-pub fn compile_infix_iadd(state: &mut FunctionState<'_, '_>, left: IntValue, right: IntValue) -> Value {
+pub fn compile_infix_iadd(
+    state: &mut FunctionState<'_, '_>,
+    left: IntValue,
+    right: IntValue,
+) -> Value {
     match (left, right) {
         (IntValue::I64(l), IntValue::I64(r)) => const_eval_op!(state, types::I64, l + r),
         (IntValue::I32(l), IntValue::I32(r)) => const_eval_op!(state, types::I32, (l + r) as i64),
@@ -41,7 +47,11 @@ pub fn compile_infix_iadd(state: &mut FunctionState<'_, '_>, left: IntValue, rig
     }
 }
 
-pub fn compile_infix_isub(state: &mut FunctionState<'_, '_>, left: IntValue, right: IntValue) -> Value {
+pub fn compile_infix_isub(
+    state: &mut FunctionState<'_, '_>,
+    left: IntValue,
+    right: IntValue,
+) -> Value {
     match (left, right) {
         (IntValue::I64(l), IntValue::I64(r)) => const_eval_op!(state, types::I64, l - r),
         (IntValue::I32(l), IntValue::I32(r)) => const_eval_op!(state, types::I32, (l - r) as i64),
@@ -55,7 +65,11 @@ pub fn compile_infix_isub(state: &mut FunctionState<'_, '_>, left: IntValue, rig
     }
 }
 
-pub fn compile_infix_imul(state: &mut FunctionState<'_, '_>, left: IntValue, right: IntValue) -> Value {
+pub fn compile_infix_imul(
+    state: &mut FunctionState<'_, '_>,
+    left: IntValue,
+    right: IntValue,
+) -> Value {
     match (left, right) {
         (IntValue::I64(l), IntValue::I64(r)) => const_eval_op!(state, types::I64, l * r),
         (IntValue::I32(l), IntValue::I32(r)) => const_eval_op!(state, types::I32, (l * r) as i64),
@@ -69,7 +83,11 @@ pub fn compile_infix_imul(state: &mut FunctionState<'_, '_>, left: IntValue, rig
     }
 }
 
-pub fn compile_infix_ieq(state: &mut FunctionState<'_, '_>, left: IntValue, right: IntValue) -> Value {
+pub fn compile_infix_ieq(
+    state: &mut FunctionState<'_, '_>,
+    left: IntValue,
+    right: IntValue,
+) -> Value {
     match (left, right) {
         (IntValue::I64(l), IntValue::I64(r)) => const_eval_op!(state, types::I8, (l == r) as i64),
         (IntValue::I32(l), IntValue::I32(r)) => const_eval_op!(state, types::I8, (l == r) as i64),
@@ -83,7 +101,11 @@ pub fn compile_infix_ieq(state: &mut FunctionState<'_, '_>, left: IntValue, righ
     }
 }
 
-pub fn compile_infix_ineq(state: &mut FunctionState<'_, '_>, left: IntValue, right: IntValue) -> Value {
+pub fn compile_infix_ineq(
+    state: &mut FunctionState<'_, '_>,
+    left: IntValue,
+    right: IntValue,
+) -> Value {
     match (left, right) {
         (IntValue::I64(l), IntValue::I64(r)) => const_eval_op!(state, types::I8, (l != r) as i64),
         (IntValue::I32(l), IntValue::I32(r)) => const_eval_op!(state, types::I8, (l != r) as i64),
@@ -131,6 +153,26 @@ pub fn compile_infix(
                 };
 
                 Ok(op_func(state, lval, rval))
+            }
+
+            (Ty::Ptr(inner_tyid), Ty::IntTy(_)) => {
+                let ptr_val = lval;
+                let index_val = rval;
+                
+                // 获取 T 的大小
+                let inner_ty = tcx.get(*inner_tyid).clone();
+                let element_size = Compiler::get_type_size(state, &inner_ty, get_platform_width() as u32)?; 
+
+                // 确保偏移量整数宽度和指针宽度一致
+                let mut offset = index_val;
+
+                // Scaling: 只有 size > 1 才需要缩放
+                if element_size > 1 {
+                    offset = state.builder.ins().imul_imm(offset, element_size as i64);
+                }
+
+                // 最终地址加法
+                Ok(state.builder.ins().iadd(ptr_val, offset))
             }
 
             (Ty::Bool, Ty::Bool) => {
