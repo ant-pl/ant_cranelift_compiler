@@ -4,16 +4,18 @@ extern "C" func printf(s: str, ...) -> i32;
 func main() -> i32 {
     printf("memory: i am free.\n");
     
-    let ptr = malloc(32usize);
+    let ptr = malloc(2usize);
 
     printf("dirty mem ptr %p\n", ptr);
     printf("dirty mem val %d\n", *ptr);
 
     *ptr = 91u8;
 
-    printf("val %d\n", *ptr);
-    printf("val %d\n", *ptr);
-    printf("val %d\n", *ptr);
+    printf("ptr val %d\n", *ptr);
+
+    *(ptr + 1usize) = 78u8
+
+    printf("ptr + 1 val %d\n", *(ptr + 1usize));
 
     0i32
 }
