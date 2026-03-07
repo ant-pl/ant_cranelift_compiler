@@ -252,7 +252,7 @@ pub fn compile_call(
             new_params,
             new_ret_ty,
             new_name,
-        }) = state.pop_compiled_generic(name.as_ref())
+        }) = state.get_compiled_generic(name.as_ref()).cloned()
     {
         params_type = new_params.iter().map(|(_, id)| *id).collect();
         ret_ty = new_ret_ty;

@@ -30,7 +30,7 @@ impl<'a> FunctionState<'a, '_> {
 
 pub trait PushGetGeneric {
     fn push_compiled_generic(&mut self, name: String, info: CompiledGenericInfo);
-    fn pop_compiled_generic(&mut self, name: &str) -> Option<CompiledGenericInfo>;
+    fn get_compiled_generic(&mut self, name: &str) -> Option<&CompiledGenericInfo>;
     
     fn push_generic(&mut self, name: String, info: GenericInfo);
     
@@ -55,8 +55,8 @@ impl<'b, 'a, T: CompileState<'a, 'b>> PushGetGeneric for T {
         self.get_compiled_generic_map().insert(name, info);
     }
 
-    fn pop_compiled_generic(&mut self, name: &str) -> Option<CompiledGenericInfo> {
-        self.get_compiled_generic_map().shift_remove(name)
+    fn get_compiled_generic(&mut self, name: &str) -> Option<&CompiledGenericInfo> {
+        self.get_compiled_generic_map().get(name)
     }
 }
 
