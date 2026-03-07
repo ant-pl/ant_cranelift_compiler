@@ -162,7 +162,7 @@ impl<'a> Compiler<'a> {
         })
     }
 
-    fn get_type_size<'aa, 'b>(
+    pub fn get_type_size<'aa, 'b>(
         state: &impl CompileState<'aa, 'b>,
         ty: &Ty,
         pointer_width: u32,
