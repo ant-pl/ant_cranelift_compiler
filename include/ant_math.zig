@@ -11,107 +11,63 @@ pub const DEG_TO_RAD = comptime PI / 180.0;
 pub const RAD_TO_DEG = comptime 180.0 / PI;
 
 pub const SIN_COEFFS = comptime [_]f64{
-    1.0,        // x^1
-    -1.0/6.0,   // x^3
-    1.0/120.0,  // x^5
-    -1.0/5040.0,// x^7
-    1.0/362880.0,// x^9
+	1.0,        // x^1
+	-1.0/6.0,   // x^3
+	1.0/120.0,  // x^5
+	-1.0/5040.0,// x^7
+	1.0/362880.0,// x^9
 };
 
 pub inline fn abs(comptime T: type, x: T) T {
-    return @call(.always_inline, math.abs, .{x});
+	return @call(.always_inline, math.abs, .{x});
 }
 
 pub inline fn trunc(comptime T: type, x: T) T {
-    return @call(.always_inline, math.trunc, .{x});
+	return @call(.always_inline, math.trunc, .{x});
 }
 
 pub inline fn sign(comptime T: type, x: T) T {
-    return if (x > 0) 1 else if (x < 0) -1 else 0;
+	return if (x > 0) 1 else if (x < 0) -1 else 0;
 }
 
 pub inline fn clamp(comptime T: type, x: T, min: T, max: T) T {
-    return @max(min, @min(max, x));
+	return @max(min, @min(max, x));
 }
 
 pub inline fn sin_fast(x: f64) f64 {
-    var x_folded = x - TAU * trunc(f64, x / TAU);
-    if (x_folded > PI) x_folded -= TAU;
-    if (x_folded < -PI) x_folded += TAU;
+	var x_folded = x - TAU * trunc(f64, x / TAU);
+	if (x_folded > PI) x_folded -= TAU;
+	if (x_folded < -PI) x_folded += TAU;
 
-    const x2 = x_folded * x_folded;
-    const x3 = x_folded * x2;
-    const x5 = x3 * x2;
-    const x7 = x5 * x2;
-    const x9 = x7 * x2;
+	const x2 = x_folded * x_folded;
+	const x3 = x_folded * x2;
+	const x5 = x3 * x2;
+	const x7 = x5 * x2;
+	const x9 = x7 * x2;
 
-    return x_folded * SIN_COEFFS[0] +
-           x3 * SIN_COEFFS[1] +
-           x5 * SIN_COEFFS[2] +
-           x7 * SIN_COEFFS[3] +
-           x9 * SIN_COEFFS[4];
+	return x_folded * SIN_COEFFS[0] +
+		x3 * SIN_COEFFS[1] +
+		x5 * SIN_COEFFS[2] +
+		x7 * SIN_COEFFS[3] +
+		x9 * SIN_COEFFS[4];
 }
 
 pub inline fn cos_fast(x: f64) f64 {
-    return sin_fast(x + PI_2);
+	return sin_fast(x + PI_2);
 }
 
 pub inline fn tan_fast(x: f64) f64 {
-    return sin_fast(x) / cos_fast(x);
+	return sin_fast(x) / cos_fast(x);
 }
 
-pub inline fn vec_add(comptime T: type, a: T, b: T) T {
-    comptime std.debug.assert(@typeInfo(T) == .Vector);
-    var res: T = undefined;
-    inline for (0..@typeInfo(T).Vector.len) |i| {
-        res[i] = a[i] + b[i];
-    }
-    return res;
-}
-
-pub inline fn vec_dot(comptime T: type, a: T, b: T) @typeInfo(T).Vector.child {
-    comptime std.debug.assert(@typeInfo(T) == .Vector);
-    const Scalar = @typeInfo(T).Vector.child;
-    var sum: Scalar = 0;
-    inline for (0..@typeInfo(T).Vector.len) |i| {
-        sum += a[i] * b[i];
-    }
-    return sum;
-}
-
-pub inline fn vec_normalize(comptime T: type, v: T) T {
-    comptime std.debug.assert(@typeInfo(T) == .Vector);
-    const Scalar = @typeInfo(T).Vector.child;
-    const len_sq = vec_dot(T, v, v);
-    const len = @sqrt(len_sq);
-    return if (len > 1e-8) v / len else v;
-}
-
-pub fn factorial(comptime n: usize) usize {
-    comptime {
-        if (n <= 1) return 1;
-        return n * factorial(n - 1);
-    }
-}
-
-pub fn pow_comptime(comptime base: f64, comptime exp: usize) f64 {
-    comptime {
-        var res: f64 = 1.0;
-        var i: usize = 0;
-        while (i < exp) : (i += 1) {
-            res *= base;
-        }
-        return res;
-    }
-}
-
+//x64
 pub inline fn rcp_fast(x: f32) f32 {
-    return switch (builtin.target.cpu.arch) {
-        .x86_64 => asm volatile ("rcpss %[x], %[res]"
-            : [res] "=x" (-> f32)
-            : [x] "x" (x)
-        ),
-        else => 1.0 / x,
-    };
+	return switch (builtin.target.cpu.arch) {
+		.x86_64 => asm volatile ("rcpss %[x], %[res]"
+			: [res] "=x" (-> f32)
+			: [x] "x" (x)
+		),
+		else => 1.0 / x,
+	};
 }
 

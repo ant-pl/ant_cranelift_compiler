@@ -10,8 +10,9 @@
 ├── build.rs                       # 构建脚本
 ├── Cargo.toml                     # 项目配置文件
 ├── test_program.ant               # 示例测试程序
-├── include/                       # 包含的 C 文件
+├── include/                       # 包含的 C/Zig 文件
 │   └── arc.c
+│   └── ant_math.zig
 ├── src/                           # 源代码目录
 │   ├── args.rs                    # 命令行参数解析模块
 │   ├── lib.rs                     # 库入口文件
@@ -71,6 +72,12 @@
 gcc -c ./include/arc.c
 mv ./arc.o ./include/arc.o
 ar rcs ./include/libarc.a ./include/arc.o
+```
+
+# 如果你是 用户
+在快速开始第三步之前 你应当编译一遍 include/ant_math.zig
+```bash
+zig build-lib include/ant_math.zig -o ant_math.a
 ```
 
 ## 贡献指南
