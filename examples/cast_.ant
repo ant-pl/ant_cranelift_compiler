@@ -1,0 +1,8 @@
+extern "C" func malloc(size: usize) -> *u8;
+
+func main() -> i32 {
+    let num_ptr = malloc(4usize) as *i32;
+    *num_ptr = 114514i32;
+
+    *num_ptr
+}
