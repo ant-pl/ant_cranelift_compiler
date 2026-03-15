@@ -7,6 +7,7 @@ use ant_type_checker::{ty::Ty, typed_ast::typed_expr::TypedExpression};
 use cranelift::prelude::{AbiParam, InstBuilder, Signature, Value};
 use cranelift_frontend::{FunctionBuilder, FunctionBuilderContext, Variable};
 use cranelift_module::Module;
+use indexmap::IndexMap;
 
 use crate::compiler::Compiler;
 use crate::compiler::imm::platform_width_to_int_type;
@@ -58,6 +59,8 @@ pub fn compile_function(
 
     block_ast: &TypedExpression,
     func_name: &str,
+
+    subst: &IndexMap<Arc<str>, TyId>,
 ) -> CompileResult<Value> {
     let func_id = state.function_map.get(func_name).cloned().map_or_else(
         || Err(format!("function {func_name} not in function map")),
@@ -121,7 +124,7 @@ pub fn compile_function(
     // 10. 声明参数变量
     for (i, (param_name, tyid)) in params.iter().enumerate() {
         let symbol = func_symbol_table.borrow_mut().define(&param_name);
-        let cranelift_ty = convert_type_to_cranelift_type(state.tcx().get(*tyid));
+        let cranelift_ty = convert_type_to_cranelift_type(&state.resolve_concrete_ty(*tyid, subst));
 
         func_builder.declare_var(Variable::from_u32(symbol.var_index as u32), cranelift_ty);
 
@@ -129,7 +132,7 @@ pub fn compile_function(
         func_builder.def_var(Variable::from_u32(symbol.var_index as u32), param_value);
     }
 
-    let ret_ty = state.tcx().get(ret_ty).clone();
+    let ret_ty = state.resolve_concrete_ty(ret_ty, subst);
 
     // 11. 编译函数体
     let mut func_state = FunctionState {
@@ -141,6 +144,7 @@ pub fn compile_function(
         data_map: state.data_map,
         generic_map: state.generic_map,
         compiled_generic_map: state.compiled_generic_map,
+        subst: subst,
         target_isa: state.target_isa.clone(),
 
         arc_alloc: state.arc_alloc,
@@ -168,6 +172,16 @@ pub fn compile_function(
         } else {
             func_state.builder.ins().return_(&[]);
         }
+    }
+
+    #[cfg(feature = "debug")]
+    {
+        let func_ref = &func_state.builder.func;
+        println!("=== before finalize:\n{}", {
+            let mut s = String::new();
+            cranelift::codegen::write_function(&mut s, func_ref).unwrap();
+            s
+        });
     }
 
     func_state.builder.finalize();

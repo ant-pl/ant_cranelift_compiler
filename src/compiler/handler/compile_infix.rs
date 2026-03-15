@@ -132,7 +132,7 @@ pub fn compile_infix(
         let lval = Compiler::compile_expr(state, &left)?;
         let rval = Compiler::compile_expr(state, &right)?;
 
-        let tcx = state.tcx();
+        let tcx = state.tcx_ref();
 
         match (tcx.get(left.get_type()), tcx.get(right.get_type())) {
             (Ty::IntTy(_), Ty::IntTy(_)) => {
@@ -158,7 +158,7 @@ pub fn compile_infix(
                 let index_val = rval;
                 
                 // 获取 T 的大小
-                let inner_ty = tcx.get(*inner_tyid).clone();
+                let inner_ty = state.resolve_concrete_ty(*inner_tyid, state.subst);
                 let element_size = Compiler::get_type_size(state, &inner_ty, get_platform_width() as u32)?; 
 
                 // 确保偏移量整数宽度和指针宽度一致

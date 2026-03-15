@@ -16,6 +16,7 @@ use std::path::PathBuf;
 use std::{collections::HashMap, fs, path::Path, rc::Rc, sync::Arc};
 
 use ant_type_checker::module::TypedModule;
+use ant_type_checker::ty::TyId;
 use cranelift_codegen::{
     isa::TargetIsa,
     settings,
@@ -81,6 +82,7 @@ pub struct FunctionState<'a, 'b> {
     pub data_map: &'a mut HashMap<String, cranelift_module::DataId>,
     pub generic_map: &'a mut HashMap<String, GenericInfo>,
     pub compiled_generic_map: &'a mut IndexMap<String, CompiledGenericInfo>,
+    pub subst: &'a IndexMap<Arc<str>, TyId>,
 
     pub typed_module: &'a mut TypedModule<'b>,
 
@@ -102,7 +104,7 @@ pub trait CompileState<'a, 'b> {
     fn get_generic_map(&mut self) -> &mut HashMap<String, GenericInfo>;
     fn get_compiled_generic_map(&mut self) -> &mut IndexMap<String, CompiledGenericInfo>;
     fn get_typed_module(&'b mut self) -> &'a mut TypedModule<'b>;
-    fn get_typed_module_ref(&mut self) -> &TypedModule<'_>;
+    fn get_typed_module_ref(&self) -> &TypedModule<'_>;
 
     fn get_table(&self) -> Rc<RefCell<SymbolTable>>;
 
@@ -327,7 +329,7 @@ impl<'a, 'b> CompileState<'a, 'b> for GlobalState<'a, 'b> {
         self.typed_module
     }
 
-    fn get_typed_module_ref(&mut self) -> &TypedModule<'_> {
+    fn get_typed_module_ref(&self) -> &TypedModule<'_> {
         self.typed_module
     }
 
@@ -377,7 +379,7 @@ impl<'a, 'b> CompileState<'a, 'b> for FunctionState<'a, 'b> {
         self.typed_module
     }
 
-    fn get_typed_module_ref(&'_ mut self) -> &'_ TypedModule<'_> {
+    fn get_typed_module_ref(&'_ self) -> &'_ TypedModule<'_> {
         self.typed_module
     }
 

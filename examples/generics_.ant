@@ -6,14 +6,26 @@ func f<T>(val: T) -> T {
     val
 }
 
+func f2<T>(ptr: *T) -> T {
+    *(ptr + 1usize)
+}
+
 func main() -> i32 {
     let o = new A {
         val = 1i64
     };
 
     extern "C" func printf(s: str, ...) -> i32;
+    extern "C" func malloc(size: usize) -> *u8;
 
+    let ptr = malloc(8usize) as *i32;
+    *ptr = 97i32;
+    *(ptr + 1usize) = 98i32;
+
+    printf("generic func2 ret val: %d\n", f2(ptr))
+    
     printf("generic struct.val: %d\n", o.val)
     printf("generic func ret val: %d\n", f(o.val))
     printf("generic func ret val * 2: %d\n", f(o.val) + f(o.val))
+
 }

@@ -84,6 +84,14 @@ fn compile_call_generic(
         return Err(format!("unsupport generic lambda fucntion"));
     };
 
+    let Ty::Function {
+        ret_type: ret_type_infer,
+        ..
+    } = state.resolve_concrete_ty(*func_ty, state.subst)
+    else {
+        return Err(format!("not a function"));
+    };
+
     let name = &name_ident.value;
 
     let GenericInfo::Function {
@@ -105,7 +113,11 @@ fn compile_call_generic(
 
     let arg_tyids = args
         .iter()
-        .map(|it| state.get_expr_ref(*it).get_type())
+        .map(|it| {
+            let expr_ty = state.get_expr_ref(*it).get_type();
+            let resolved = state.resolve_concrete_ty(expr_ty, state.subst);
+            state.tcx().alloc(resolved)
+        })
         .collect::<Vec<TyId>>();
 
     let arg_types = arg_tyids
@@ -115,41 +127,44 @@ fn compile_call_generic(
 
     let mangled_func_name = mangle_func(&name, &arg_types);
 
-    let mut new_param_types = vec![];
     let mut generic_param_to_real_types = IndexMap::new();
-
-    for ((param_name, param_tyid), arg_tyid) in all_params.iter().zip(arg_tyids) {
-        let param_ty = state.tcx().get(*param_tyid);
-
-        if !matches!(param_ty, Ty::Generic(..)) {
-            // 不是泛型参数 选用默认的形参类型
-            new_param_types.push((param_name.clone(), *param_tyid));
-        } else if let Ty::Generic(name, _need_traits) = param_ty {
-            // 是泛型参数 选用实参的类型
-            new_param_types.push((param_name.clone(), arg_tyid));
-
-            generic_param_to_real_types.insert(name.clone(), arg_tyid);
-        }
+    
+    for ((_, generic_param_id), arg_tyid) in all_params.iter().zip(&arg_tyids) {
+        let param_ty = state.tcx_ref().get(*generic_param_id).clone();
+        Compiler::substitute(
+            state.tcx_ref(),
+            &param_ty,
+            *arg_tyid,
+            &mut generic_param_to_real_types,
+        );
     }
+    
+    let def_ret_ty_obj = state.tcx_ref().get(ret_ty).clone();
+    Compiler::substitute(
+        state.tcx_ref(),
+        &def_ret_ty_obj,
+        ret_type_infer,
+        &mut generic_param_to_real_types,
+    );
 
-    let ret_tyid = if let Ty::Generic(name, _need_traits) = state.tcx().get(ret_ty) {
-        // 是泛型 从泛型表中获取实际类型
-        let Some(real_ty) = generic_param_to_real_types.get(name.as_ref()) else {
-            return Err(format!("type `{name}` not found"));
-        };
+    let concrete_param_types: Vec<_> = all_params
+        .iter()
+        .map(|(name, id)| {
+            (
+                name.clone(),
+                state.resolve_concrete_ty(*id, &generic_param_to_real_types),
+            )
+        })
+        .collect();
 
-        *real_ty
-    } else {
-        // 不是泛型 直接使用原有类型
-        ret_ty
-    };
+    let concrete_ret_ty = state.resolve_concrete_ty(ret_ty, &generic_param_to_real_types);
 
     let signature = make_signature(
-        &new_param_types
+        &concrete_param_types
             .iter()
-            .map(|(_, tyid)| state.typed_module.tcx_ref().get(*tyid))
+            .map(|(_, tyid)| tyid)
             .collect::<Vec<_>>(),
-        state.typed_module.tcx_ref().get(ret_tyid),
+        &concrete_ret_ty,
     );
 
     // 声明并注册函数
@@ -168,22 +183,31 @@ fn compile_call_generic(
 
     let block = block.clone();
 
+    let concrete_param_ty_ids = concrete_param_types
+        .clone()
+        .into_iter()
+        .map(|(name, ty)| (name, state.tcx().alloc(ty)))
+        .collect::<Vec<_>>();
+
+    let concrete_ret_ty_id = state.tcx().alloc(concrete_ret_ty);
+
     state.push_compiled_generic(
         name.to_string(),
         CompiledGenericInfo::Function {
             new_name: mangled_func_name.clone(),
-            new_params: new_param_types.clone().into_iter().collect(),
-            new_ret_ty: ret_tyid,
+            new_params: concrete_param_ty_ids.clone().into_iter().collect(),
+            new_ret_ty: concrete_ret_ty_id,
         },
     );
 
     compile_function(
         state,
         signature,
-        &new_param_types,
-        ret_tyid,
+        &concrete_param_ty_ids,
+        concrete_ret_ty_id,
         &block,
         &mangled_func_name,
+        &generic_param_to_real_types,
     )?;
 
     compile_call(state, func, args, func_ty)
