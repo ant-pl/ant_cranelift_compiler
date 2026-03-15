@@ -878,13 +878,15 @@ impl<'a> Compiler<'a> {
             }
 
             TypedStatement::Return { expr, .. } => {
-                let expr = state.get_expr_ref(*expr).clone();
+                if let Some(expr) = expr {
+                    let expr = state.get_expr_ref(*expr).clone();
 
-                let val = Self::compile_expr(state, &expr)?;
+                    let val = Self::compile_expr(state, &expr)?;
 
-                let obj_ty = state.tcx().get(expr.get_type()).clone();
+                    let obj_ty = state.tcx().get(expr.get_type()).clone();
 
-                state.retain_if_needed(val, &obj_ty);
+                    state.retain_if_needed(val, &obj_ty);
+                }
 
                 let symbols = state.table.borrow().map.clone();
 
@@ -895,6 +897,11 @@ impl<'a> Compiler<'a> {
                         state.emit_release(val);
                     }
                 }
+
+                let val = state
+                    .builder
+                    .ins()
+                    .iconst(convert_type_to_cranelift_type(&Ty::Unit), 0);
 
                 state.builder.ins().return_(&[val]);
 
