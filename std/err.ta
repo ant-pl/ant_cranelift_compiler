@@ -1,0 +1,23 @@
+extern "C" func malloc(size: usize) -> *u8;
+extern "C" func free(ptr: *u8) -> u8;
+
+struct err {
+	what: *u8
+}
+
+// panic() means `bad`
+// calling it is a UB
+func panic() {
+	const ptr = 0u8 as *i64;
+	free(ptr);
+	*ptr = 137891i64;
+
+	const ptr2 = malloc(1024);
+	free(ptr2);
+	*ptr2 = 91u8;
+
+	let str = "NineOneSevenEightOneThree";
+	*(str + 114514usize) = 78u8;
+
+	panic();
+}
