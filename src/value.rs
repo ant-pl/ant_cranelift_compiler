@@ -50,7 +50,7 @@ impl LiteralExprToConst for TypedExpression {
             Self::Int { value, .. } => Some(ConstVal::Int(*value)),
             Self::StrLiteral { value, .. } => Some(ConstVal::Str(value.to_string())),
             Self::Bool { value, .. } => Some(ConstVal::Bool(*value)),
-            _ => unreachable!()
+            _ => None
         }
     }
 }
