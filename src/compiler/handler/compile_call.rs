@@ -306,7 +306,9 @@ pub fn compile_call(
 
             let mut arg_val = Compiler::compile_expr(state, &arg)?;
 
-            if cl_ty == types::F64 && CALL_CONV == CallConv::WindowsFastcall {
+            if (cl_ty == types::F64 || cl_ty == types::F32)
+                && CALL_CONV == CallConv::WindowsFastcall
+            {
                 // Windows 变长参数规则：将浮点数通过位转换视为整数传递
                 // 这样它会进入 RDX/R8/R9 寄存器，而不是只在 XMM 里
                 arg_val = state
@@ -353,7 +355,9 @@ pub fn compile_call(
             let cl_ty = convert_type_to_cranelift_type(state.tcx().get(arg.get_type()));
 
             sig.params.push(AbiParam::new(
-                if cl_ty == types::F64 && CALL_CONV == CallConv::WindowsFastcall {
+                if (cl_ty == types::F64 && cl_ty == types::F32)
+                    && CALL_CONV == CallConv::WindowsFastcall
+                {
                     types::I64
                 } else {
                     cl_ty
