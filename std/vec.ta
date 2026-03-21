@@ -10,9 +10,9 @@ struct Vec<T> {
 
 func vec_init<T>() -> Vec<T> {
     let v = new Vec {
-        ptr = 0usize as *T,
-        cap = 0usize,
-        len = 0usize
+        ptr = 0 as *T,
+        cap = 0,
+        len = 0
     };
 
     v
@@ -21,8 +21,8 @@ func vec_init<T>() -> Vec<T> {
 func vec_inita<T>(first: T) -> Vec<T> {
     let v = new Vec {
         ptr = malloc(sizeof T) as *T,
-        cap = 1usize,
-        len = 1usize
+        cap = 1,
+        len = 1
     };
 
     *v.ptr = first;
@@ -31,10 +31,10 @@ func vec_inita<T>(first: T) -> Vec<T> {
 }
 
 func vec_grow<T>(v: Vec<T>) {
-    let new_cap = if v.cap == 0usize {
-        2usize
+    let new_cap = if v.cap == 0 {
+        2
     } else {
-        v.cap * 2usize
+        v.cap * 2
     };
 
     let new_size = new_cap * (sizeof T);
@@ -65,7 +65,7 @@ func vec_push<T>(v: Vec<T>, item: T) {
     *target_addr = item;
 
     // 长度加 1
-    v.len = v.len + 1usize;
+    v.len = v.len + 1;
 }
 
 func vec_get<T>(v: Vec<T>, i: usize) -> T {
@@ -73,16 +73,16 @@ func vec_get<T>(v: Vec<T>, i: usize) -> T {
 }
 
 func vec_pop<T>(v: Vec<T>) -> T {
-    v.len = v.len - 1usize;
+    v.len = v.len - 1;
     *(v.ptr + v.len) // 返回最后一个元素
 }
 
 func vec_free<T>(v: Vec<T>) {
-    if v.ptr as usize != 0usize {
+    if v.ptr as usize != 0 {
         free(v.ptr as *u8);
-        v.ptr = 0usize as *T;
-        v.len = 0usize;
-        v.cap = 0usize;
+        v.ptr = 0 as *T;
+        v.len = 0;
+        v.cap = 0;
     }
 }
 
@@ -90,13 +90,13 @@ func main() -> i32 {
     extern "C" func printf(s: str, ...) -> i32;
 
     let v = vec_init::<i32>();
-    vec_push(v, 42i32);
-    vec_push(v, 91i32);
-    vec_push(v, 78i32);
+    vec_push(v, 42);
+    vec_push(v, 91);
+    vec_push(v, 78);
 
-    printf("0: %d\n", vec_get(v, 0usize));
-    printf("1: %d\n", vec_get(v, 1usize));
-    printf("2: %d\n", vec_get(v, 2usize));
+    printf("0: %d\n", vec_get(v, 0));
+    printf("1: %d\n", vec_get(v, 1));
+    printf("2: %d\n", vec_get(v, 2));
 
-    0i32;
+    0;
 }
