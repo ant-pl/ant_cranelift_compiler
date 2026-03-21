@@ -309,7 +309,11 @@ pub fn compile_call(
             if (cl_ty == types::F64 || cl_ty == types::F32)
                 && CALL_CONV == CallConv::WindowsFastcall
             {
-                let f64_val = state.builder.ins().fpromote(types::F64, arg_val);
+                let f64_val = if cl_ty != types::F64 {
+                    state.builder.ins().fpromote(types::F64, arg_val)
+                } else {
+                    arg_val
+                };
 
                 // Windows 变长参数规则：将浮点数通过位转换视为整数传递
                 // 这样它会进入 RDX/R8/R9 寄存器，而不是只在 XMM 里
