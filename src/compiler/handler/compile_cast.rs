@@ -1,5 +1,5 @@
-use ant_type_checker::ty::{Ty, TyId};
-use cranelift::prelude::{InstBuilder, IntCC, Value};
+use ant_type_checker::ty::{FloatTy, Ty, TyId};
+use cranelift::prelude::{InstBuilder, IntCC, Value, types};
 
 use crate::compiler::{
     CompileResult, Compiler, FunctionState, convert_type::convert_type_to_cranelift_type,
@@ -71,6 +71,14 @@ pub fn compile_cast(
             let is_not_zero = state.builder.ins().icmp(IntCC::NotEqual, val, zero);
 
             Ok(state.builder.ins().uextend(dest_cranelift_ty, is_not_zero))
+        }
+
+        (Ty::FloatTy(FloatTy::F32), Ty::FloatTy(FloatTy::F64)) => {
+            Ok(state.builder.ins().fpromote(types::F64, val))
+        }
+
+        (Ty::FloatTy(FloatTy::F64), Ty::FloatTy(FloatTy::F32)) => {
+            Ok(state.builder.ins().fdemote(types::F32, val))
         }
 
         (lty, rty) => Err(format!("impl cast {} as {}", lty, rty)),
