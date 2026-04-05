@@ -7,7 +7,7 @@ use std::{cell::RefCell, fs, path::PathBuf, rc::Rc, sync::Arc};
 
 use crate::compiler::{Compiler, compile_to_executable, create_target_isa, table::SymbolTable};
 
-use ant_crate_def::ModuleId;
+use ant_id::ModuleId;
 use ant_lexer::Lexer;
 use ant_name_resolver::NameResolver;
 use ant_parser::{Parser, error::display_err};

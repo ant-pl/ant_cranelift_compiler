@@ -2049,7 +2049,7 @@ impl<'a> Compiler<'a> {
 mod tests {
     use std::{cell::RefCell, path::Path, rc::Rc};
 
-    use ant_crate_def::ModuleId;
+    use ant_id::ModuleId;
     use ant_lexer::Lexer;
     use ant_name_resolver::NameResolver;
     use ant_parser::Parser;

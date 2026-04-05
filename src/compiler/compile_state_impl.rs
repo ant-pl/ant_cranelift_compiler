@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use ant_ast::{ExprId, StmtId};
+use ant_id::{ExprId, StmtId};
 use ant_ty::{Ty, TyId};
 use ant_typed_ast::{typed_expr::TypedExpression, typed_stmt::TypedStatement};
 use ant_typed_module::ty_context::TypeContext;

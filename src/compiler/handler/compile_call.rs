@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use ant_ast::{ExprId, node::GetToken};
+use ant_ast::node::GetToken;
+use ant_id::ExprId;
 use ant_token::{token::Token, token_type::TokenType};
 use ant_ty::{Ty, TyId};
 use ant_typed_ast::{GetType, typed_expr::TypedExpression, typed_expressions::ident::Ident};
