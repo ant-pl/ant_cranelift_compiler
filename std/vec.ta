@@ -1,3 +1,5 @@
+use ptr::null_of;
+
 extern "C" func malloc(size: usize) -> *u8;
 extern "C" func free(ptr: *u8) -> u8;
 extern "C" func memcpy(dest: *u8, src: *u8, n: usize);
@@ -10,7 +12,7 @@ struct Vec<T> {
 
 func vec_init<T>() -> Vec<T> {
     let v = new Vec {
-        ptr = 0 as *T,
+        ptr = null_of::<T>(),
         cap = 0,
         len = 0
     };
@@ -80,7 +82,7 @@ func vec_pop<T>(v: Vec<T>) -> T {
 func vec_free<T>(v: Vec<T>) {
     if v.ptr as usize != 0 {
         free(v.ptr as *u8);
-        v.ptr = 0 as *T;
+        v.ptr = null_of::<T>();
         v.len = 0;
         v.cap = 0;
     }
