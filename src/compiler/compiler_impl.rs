@@ -1925,7 +1925,7 @@ impl<'a> Compiler<'a> {
 
             match def {
                 Def::Function(data) => {
-                    let ty = state.get_typed_module_ref().tcx_ref().get(data.ty).clone();
+                    let ty = state.get_typed_module_ref().tcx_ref().get(data.ty.get()).clone();
                     let Ty::Function {
                         generics,
                         params_type,
