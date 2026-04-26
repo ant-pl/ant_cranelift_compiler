@@ -1,0 +1,20 @@
+// views.ta
+
+use iteration;
+
+func reverse_next<T>(this: Iteration<T>) -> Iteration<T> {
+	this.raw - 1usize
+}
+
+func reverse<T>(begin: Iteration<T>, end: Iteration<T>) {
+	let tmp = begin.raw;
+	begin.raw = end.raw;
+	end.raw = tmp;
+
+	begin.next = reverse_next;
+	end.next = reverse_next;
+}
+
+func settransform<T>(it: Iteration<T>, new_get: Iteration<T>) {
+	it.get = new_get;
+}

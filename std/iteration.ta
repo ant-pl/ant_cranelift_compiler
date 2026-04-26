@@ -1,0 +1,53 @@
+// iteration.ta
+
+use ptr::null_of;
+
+struct Iteration<T> {
+	raw: *T, // 原始指针
+    next: usize, // 下一个 (a callable): func(Iteration<T>)
+    get: usize // 获取 (a callable): func(Iteration<T>)
+}
+
+func nor_next<T>(this: Iteration<T>) -> Iteration<T> {
+	this.raw + 1usize
+}
+
+func nor_get<T>(this: Iteration<T>) -> T {
+	*this.raw
+}
+
+func iteration_init<T>() -> Iteration<T> {
+    let v = new Iteration {
+        raw = null_of::<T>(),
+        next = 0usize,
+        get = 0usize
+    };
+
+    v
+}
+
+// usage: iteration_inita::<T>(<a T ptr>, nor_next, nor_get)
+func iteration_inita<T>(raw: *T, next: usize, get: usize) -> Iteration<T> {
+    let v = new Iteration {
+        raw = raw,
+        next = next,
+        get = next
+    };
+
+    v
+}
+
+func iteration_eq<T>(first: Iteration<T>, second: Iteration<T>) -> bool {
+	first.raw == second.raw
+}
+
+func iteration_ne<T>(first: Iteration<T>, second: Iteration<T>) -> bool {
+	first.raw != second.raw
+}
+
+func iteration_usable(this: Iteration<T>) -> bool {
+	this.raw && next && get
+}
+
+// usage:
+// it.get(it) it.next(it)

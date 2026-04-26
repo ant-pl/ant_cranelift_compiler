@@ -1,4 +1,5 @@
 use ptr::null_of;
+use iteration::iteration_inita;
 
 extern "C" func malloc(size: usize) -> *u8;
 extern "C" func free(ptr: *u8) -> u8;
@@ -86,4 +87,12 @@ func vec_free<T>(v: Vec<T>) {
         v.len = 0;
         v.cap = 0;
     }
+}
+
+func vec_begin<T>(v: Vec<T>) -> Iteration<T> {
+    iteration_inita(v.ptr, nor_next, nor_get)
+}
+
+func vec_end<T>(v: Vec<T>) -> Iteration<T> {
+    iteration_inita(v.ptr + v.len, nor_next, nor_get)
 }

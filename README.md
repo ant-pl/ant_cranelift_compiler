@@ -69,15 +69,9 @@
 (在项目根目录下)
 
 ```bash
-gcc -c ./include/arc.c
-mv ./arc.o ./include/arc.o
-ar rcs ./include/libarc.a ./include/arc.o
-```
-
-# 如果你是 用户
-在快速开始第三步之前 你应当编译一遍 include/ant_math.zig
-```bash
-zig build-lib include/ant_math.zig -o ant_math.a
+gcc -c ./include/clib/arc.c
+mv ./arc.o ./include/clib/arc.o
+ar rcs ./include/clib/libarc.a ./include/clib/arc.o
 ```
 
 ## 贡献指南
