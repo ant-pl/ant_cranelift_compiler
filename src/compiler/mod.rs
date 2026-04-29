@@ -206,7 +206,7 @@ pub fn compile_to_executable(
             }
         } else {
             normal_target.to_string()
-        }
+        };
 
         // let _target: String = read_arg().map(|args|args.target_triple).unwrap_or(_target.to_string());
         // let target: &str = _target.as_str();
