@@ -220,7 +220,7 @@ pub fn compile_to_executable(
             .target(&target)
             .host("CONSOLE")
             .cargo_metadata(false)
-            .out_dir(output_path.parent().unwrap_or(Path::new(""));
+            .out_dir(output_path.parent().unwrap_or(Path::new("")));
 
         if let Some(args) = &arg {
             let opt = &args.opt_level;
