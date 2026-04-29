@@ -157,9 +157,11 @@ pub fn compile_to_executable(
     use cc;
     use tempfile;
 
+	let arg = read_arg();
+    
     // 默认使用临时 .o；当 --keep-cache 开启时将 .o 保留在输出目录
-    let keep_cache = read_arg().map(|args| args.keep_cache).unwrap_or(false);
-    let compile_only = read_arg().map(|args|args.compile_only).unwrap_or(false);
+    let keep_cache = arg.as_ref().map(|args| args.keep_cache).unwrap_or(false);
+    let compile_only = arg.as_ref().map(|args|args.compile_only).unwrap_or(false);
     let _temp_dir_guard: Option<tempfile::TempDir>;
     let object_file_path = if keep_cache || compile_only {
         let parent = output_path.parent().unwrap_or(Path::new("."));
@@ -197,7 +199,7 @@ pub fn compile_to_executable(
             "x86_64-apple-darwin"
         };
 
-        let target = if let Some(args) = read_arg() {
+        let target = if let Some(args) = &arg {
             let usr_target = args.target_triple;
             if usr_target.is_empty() {
                 normal_target.to_string()
@@ -218,9 +220,9 @@ pub fn compile_to_executable(
             .target(&target)
             .host("CONSOLE")
             .cargo_metadata(false)
-            .out_dir(output_path.parent().unwrap_or(Path::new("")));
+            .out_dir(output_path.parent().unwrap_or(Path::new(""));
 
-        if let Some(args) = read_arg() {
+        if let Some(args) = &arg {
             let opt = &args.opt_level;
 
             build.opt_level_str(&opt.0);
@@ -248,7 +250,7 @@ pub fn compile_to_executable(
         };
 
         let mut command = compiler.to_command();
-        if read_arg().map(|args|args.debug_info).unwrap_or(false) {
+        if arg.as_ref().map(|args| args.debug_info).unwrap_or(false) {
             command.arg("-g");
         }
         command
@@ -261,7 +263,7 @@ pub fn compile_to_executable(
             .arg("arc");
 
         // 用户额外链接库
-        if let Some(it) = read_arg() {
+        if let Some(it) = &arg {
             for path in &it.link_with {
                 command.arg("-L").arg(
                     PathBuf::from(path)
