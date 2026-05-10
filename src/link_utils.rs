@@ -445,7 +445,7 @@ pub fn add_platform_specific_flags(command: &mut dyn CommandLike) {
 
     #[cfg(target_os = "macos")]
     {
-        command.arg("-fPIC")
+        command.arg("-fPIC");
     }
 }
 
