@@ -42,6 +42,26 @@
 - **Cranelift 集成**：利用 Cranelift 提供高效的机器代码生成。
 - **模块化设计**：代码结构清晰 (并非清晰)，便于扩展和维护。(并非便于扩展和维护)
 
+## 编译基本依赖
+
+在快速开始第三步之前 你应当重新编译一遍 arc 文件
+(在项目根目录下)
+
+### GCC 用户
+```bash
+gcc -c ./include/clib/arc.c
+mv ./arc.o ./include/clib/arc.o
+ar rcs ./include/clib/libarc.a ./include/clib/arc.o
+```
+
+### MSVC 用户
+在 Developer Command Prompt for VS 执行
+```bash
+cd path/to/ant_cranelift_compiler/
+cl /c /O2 /MD ./include/clib/arc.c /Fo:./include/clib/arc.obj
+lib /OUT:./include/clib/libarc.lib ./include/clib/arc.obj
+```
+
 ## 快速开始
 
 1. 克隆项目：
@@ -62,17 +82,6 @@
    ```bash
    cargo run -- -f test_program.ant
    ```
-
-## 如果你是 linux 用户
-
-在快速开始第三步之前 你应当重新编译一遍 libarc.a
-(在项目根目录下)
-
-```bash
-gcc -c ./include/clib/arc.c
-mv ./arc.o ./include/clib/arc.o
-ar rcs ./include/clib/libarc.a ./include/clib/arc.o
-```
 
 ## 贡献指南
 
