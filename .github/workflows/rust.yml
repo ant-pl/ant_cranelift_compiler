@@ -29,17 +29,39 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build
-        run: cargo build --release
+        run: |
+          gcc -c include/clib/arc.c -o include/clib/arc.o
+          ar rcs include/clib/libarc.a include/clib/arc.o
+          cargo build --release
 
       - name: Run tests
-        run: cargo test --release
+        run: |
+          gcc -c include/clib/arc.c -o include/clib/arc.o
+          ar rcs include/clib/libarc.a include/clib/arc.o
+          cargo test --release
 
       - name: Inspect release output
         shell: bash
         run: ls -lah target/release
 
-      - name: Upload binary
+      - name: Package Artifacts
+        shell: bash
+        run: |
+          mkdir staging
+          cp target/release/${{ matrix.bin }} staging/
+          cp -r include staging/
+          cp -r std staging/
+          
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            7z a antc-${{ matrix.os }}.zip ./staging/*
+          else
+            cd staging && zip -r ../antc-${{ matrix.os }}.zip ./* && cd ..
+          fi
+
+      - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: antc-${{ matrix.os }}
-          path: target/release/${{ matrix.bin }}
+          # 下载时的文件名
+          name: antc-${{ matrix.os }}-package
+          # 需要上传的 zip 文件路径
+          path: antc-${{ matrix.os }}.zip
