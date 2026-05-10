@@ -68,8 +68,12 @@ impl std::str::FromStr for CraneliftOptLevel {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
+            "none" => Ok(Self::None),
+            "speed" => Ok(Self::Speed),
+            "speed_and_size" => Ok(Self::SpeedAndSize),
+
             _ => Err(format!(
-                "Invalid opt level: {}. Options: 0, 1, 2, 3, s, z",
+                "Invalid opt level: {}. Options: none, speed, speed_and_size",
                 s
             )),
         }
@@ -111,7 +115,7 @@ impl Display for OptLevelArg {
     }
 }
 
-pub static mut ARG: Option<Args> = { None };
+pub static mut ARG: Option<Args> = None;
 
 pub fn read_arg() -> Option<Args> {
     unsafe { (*&raw const ARG).clone() }
