@@ -82,6 +82,10 @@ pub static ARG_TO_ABI_ARG: Lazy<HashMap<&str, HashMap<&str, &str>>> = Lazy::new(
 });
 
 pub fn choose_linker(target_triple: &TargetTriple) -> Option<Command> {
+    if target_triple.os == "macos" || target_triple.vendor == "apple" {
+        return Some(Command::new("clang"));
+    }
+
     match target_triple.abi.as_str() {
         "msvc" => Some(
             cc::windows_registry::find_tool(&target_triple.to_string(), "link.exe")
@@ -210,7 +214,13 @@ pub fn get_linker_config(
     target_triple: &TargetTriple,
 ) -> Result<LinkerConfig, Box<dyn std::error::Error>> {
     let abi_config = ARG_TO_ABI_ARG
-        .get(target_triple.abi.as_str())
+        .get(
+            if target_triple.abi.is_empty() || target_triple.vendor == "apple" {
+                "gnu"
+            } else {
+                target_triple.abi.as_str()
+            },
+        )
         .ok_or_else(|| format!("Unsupported ABI: {}", target_triple.abi))?;
 
     Ok(LinkerConfig {
