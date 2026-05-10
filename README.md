@@ -47,6 +47,8 @@
 在快速开始第三步之前 你应当重新编译一遍 arc 文件
 (在项目根目录下)
 
+请注意: 如果你是 MacOS 用户, 请在 gcc 的编译选项加上 -fPIC
+
 ### GCC 用户
 ```bash
 gcc -c ./include/clib/arc.c
