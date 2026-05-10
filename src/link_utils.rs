@@ -443,7 +443,10 @@ pub fn add_platform_specific_flags(command: &mut dyn CommandLike) {
         command.arg("-lmsvcrt");
     }
 
-    // macOS 不需要额外标志
+    #[cfg(target_os = "macos")]
+    {
+        command.arg("-fPIC")
+    }
 }
 
 pub trait CommandLike {
