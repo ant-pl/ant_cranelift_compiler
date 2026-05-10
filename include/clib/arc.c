@@ -1,10 +1,9 @@
-#include <stdlib.h>
+﻿#include <stdlib.h>
 #include <stdint.h>
 
 #if defined(_MSC_VER)
-    #include <windows.h>
-    #define ARC_INC(ptr) InterlockedIncrement64((volatile LONGLONG*)(ptr))
-    #define ARC_DEC(ptr) InterlockedDecrement64((volatile LONGLONG*)(ptr))
+    #define ARC_INC(ptr) _InterlockedIncrement64((volatile __int64*)(ptr))
+    #define ARC_DEC(ptr) _InterlockedDecrement64((volatile __int64*)(ptr))
 #else
     #define ARC_INC(ptr) __atomic_add_fetch((size_t*)(ptr), 1, __ATOMIC_RELAXED)
     #define ARC_DEC(ptr) __atomic_sub_fetch((size_t*)(ptr), 1, __ATOMIC_RELAXED)
