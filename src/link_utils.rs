@@ -64,19 +64,23 @@ pub static ARG_TO_ABI_ARG: Lazy<HashMap<&str, HashMap<&str, &str>>> = Lazy::new(
     let mut m = HashMap::new();
 
     let mut msvc = HashMap::new();
-
     msvc.insert("linkdir", "/LIBPATH");
     msvc.insert("link", "");
     msvc.insert("output", "/OUT");
 
     let mut gnu = HashMap::new();
-
     gnu.insert("linkdir", "-L");
     gnu.insert("link", "-l");
     gnu.insert("output", "-o");
 
+    let mut clang = HashMap::new();
+    clang.insert("linkdir", "-L");
+    clang.insert("link", "-l");
+    clang.insert("output", "-o");
+
     m.insert("msvc", msvc);
     m.insert("gnu", gnu);
+    m.insert("clang", clang);
 
     m
 });
@@ -92,9 +96,42 @@ pub fn choose_linker(target_triple: &TargetTriple) -> Option<Command> {
                 .map(|it| it.to_command())
                 .unwrap_or(Command::new("link")),
         ),
-        "gnu" => Some(Command::new("gcc")),
+        "gnu" => Some(Command::new(choose_gnu_style_linker())),
         _ => None,
     }
+}
+
+fn choose_gnu_style_linker() -> String {
+    // 优先使用环境变量指定的链接器
+    if let Ok(linker) = std::env::var("LINKER")
+        && !linker.is_empty()
+    {
+        return linker;
+    }
+
+    // 检查 gcc 是否可用
+    if Command::new("gcc")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
+        return "gcc".to_string();
+    }
+
+    // 检查 clang 是否可用
+    if Command::new("clang")
+        .arg("--version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+    {
+        eprintln!("Warning: gcc not found, using clang instead");
+        return "clang".to_string();
+    }
+
+    eprintln!("Warning: neither gcc nor clang found, falling back to gcc");
+    "gcc".to_string()
 }
 
 /// 确定目标三元组
@@ -346,19 +383,46 @@ pub fn build_linker_args(
         // 添加用户指定的库
         add_user_libraries_msvc(command, linker_config, arg);
     } else {
-        // GNU 链接器参数（gcc）
+        let is_clang = target_triple.abi == "clang"
+            || (target_triple.abi == "gnu" && choose_gnu_style_linker() == "clang");
+
         command
-            .arg(lib_path.to_string_lossy().as_ref()) // 输入的静态库
+            .arg(lib_path.to_string_lossy().as_ref())
             .arg(linker_config.output_flag.as_str())
             .arg(output_path.to_string_lossy().as_ref())
             .arg(linker_config.linkdir_flag.as_str())
             .arg(&clib_path)
             .arg(linker_config.library_flag.as_str())
-            .arg("arc"); // 链接 arc 库
+            .arg("arc");
+
+        // 🆕 Clang 特定标志
+        if is_clang {
+            add_clang_specific_flags(command);
+        }
 
         // 添加用户指定的库
         add_user_libraries_gnu(command, linker_config, arg);
     }
+}
+
+pub fn add_clang_specific_flags(command: &mut dyn CommandLike) {
+    #[cfg(target_os = "linux")]
+    {
+        command.arg("-static");
+        command.arg("-lc");
+        command.arg("-fuse-ld=lld"); // 使用 LLD 链接器（更快）
+        command.arg("-Wl,-z,noexecstack");
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        command.arg("-static");
+        command.arg("-lmsvcrt");
+        command.arg("-fuse-ld=lld");
+    }
+
+    // 添加更多 Clang 优化标志
+    command.arg("-fno-strict-aliasing");
 }
 
 /// 为 MSVC 添加用户指定的链接库
