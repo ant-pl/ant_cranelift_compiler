@@ -1,0 +1,21 @@
+extern "C" func printf(s: str, ...) -> i32;
+enum Color {
+    Red(u8),
+    Green(u8),
+    Blue(u8),
+}
+
+func main() -> i32 {
+    let c1: Color = Color::Red(2u8);
+    let c2: Color = Color::Green(3u8);
+    if c1 == c2 {
+        printf("same\n")
+    } else {
+        printf("different\n")
+    }
+
+    if let Color::Red(x) = c1 {
+        printf("Matched: %d", x);
+    }
+    0
+}

@@ -770,10 +770,7 @@ impl<'a> Compiler<'a> {
                     .def_var(Variable::from_u32(symbol.var_index as u32), val);
 
                 // unit
-                Ok(state
-                    .builder
-                    .ins()
-                    .iconst(convert_type_to_cranelift_type(&Ty::Unit), 0))
+                Ok(val)
             }
 
             TypedStatement::Block {
@@ -1360,6 +1357,69 @@ impl<'a> Compiler<'a> {
                     .load(cranelift_ty, MemFlags::new(), field_ptr, 0))
             }
 
+            TypedExpression::EnumVariant {
+                ty,
+                enum_name,
+                variant,
+                args,
+                ..
+            } => {
+                let enum_ty = state.tcx_ref().get(*ty).clone();
+
+                let Ty::Enum { variants, .. } = &enum_ty else {
+                    return Err(format!(
+                        "expected enum type for `{}::{}`, got: `{}`",
+                        enum_name.value,
+                        variant.value,
+                        display_ty(&enum_ty, state.tcx_ref())
+                    ));
+                };
+
+                let variant_idx =
+                    variants
+                        .get_index_of(variant.value.as_ref())
+                        .ok_or_else(|| {
+                            format!(
+                                "variant `{}` not found in enum `{}`",
+                                variant.value, enum_name.value
+                            )
+                        })?;
+
+                // 编码: 高 32 位存 tag（变体索引），低 32 位存 payload 值
+                // 无参数变体: (tag << 32) | 0
+                // 带参数变体: (tag << 32) | (value & 0xFFFFFFFF)
+                let tag_val = state.builder.ins().iconst(
+                    types::I64,
+                    (variant_idx as i64) << 32,
+                );
+
+                if !args.is_empty() {
+                    // 编译第一个参数的值
+                    let arg_expr = state.get_expr_ref(args[0]).clone();
+                    let payload_val = Self::compile_expr(state, &arg_expr)?;
+
+                    // 获取 payload 值的 cranelift 类型
+                    let payload_ty = arg_expr.get_type();
+                    let payload_cranelift_ty = convert_type_to_cranelift_type(
+                        state.tcx_ref().get(payload_ty),
+                    );
+
+                    // 如果 payload 还不是 i64，将其扩展到 i64
+                    let payload_val = if payload_cranelift_ty != types::I64 {
+                        state.builder.ins().uextend(types::I64, payload_val)
+                    } else {
+                        payload_val
+                    };
+
+                    // 将 payload 截断到低 32 位后与 tag 合并
+                    let masked_payload =
+                        state.builder.ins().band_imm(payload_val, 0x00000000FFFFFFFFu64 as i64);
+                    Ok(state.builder.ins().bor(tag_val, masked_payload))
+                } else {
+                    Ok(tag_val)
+                }
+            }
+
             TypedExpression::BuildStruct(_, struct_name, fields, _) => {
                 let fields = fields
                     .iter()
@@ -1748,6 +1808,149 @@ impl<'a> Compiler<'a> {
                 state.builder.ins().jump(end_block, &[val]);
                 state.builder.seal_block(then_block);
 
+                if let Some(else_block_label) = else_block_label {
+                    state.builder.switch_to_block(else_block_label);
+                    let expr = state.get_expr_ref(else_block.unwrap()).clone();
+                    let else_val = Self::compile_expr(state, &expr)?;
+                    state.builder.ins().jump(end_block, &[else_val]);
+                    state.builder.seal_block(else_block_label);
+                }
+
+                state.builder.switch_to_block(end_block);
+                state.builder.seal_block(end_block);
+                let end_val = state.builder.block_params(end_block)[0];
+
+                Ok(end_val)
+            }
+
+            TypedExpression::IfLet {
+                enum_name,
+                variant,
+                bindings,
+                scrutinee,
+                consequence,
+                else_block,
+                ty,
+                ..
+            } => {
+                let scrutinee_expr = state.get_expr_ref(*scrutinee).clone();
+                let scrutinee_ty = state.tcx_ref().get(scrutinee_expr.get_type()).clone();
+
+                // 获取枚举类型以查找变体索引
+                let Ty::Enum {
+                    variants: enum_variants,
+                    ..
+                } = &scrutinee_ty
+                else {
+                    return Err(format!(
+                        "expected enum type for `{}`, got `{}`",
+                        enum_name.value,
+                        display_ty(&scrutinee_ty, state.tcx_ref())
+                    ));
+                };
+
+                let variant_index = enum_variants
+                    .get_index_of(variant.value.as_ref())
+                    .ok_or_else(|| {
+                        format!(
+                            "variant `{}` not found in enum `{}`",
+                            variant.value, enum_name.value
+                        )
+                    })?;
+
+                let consequence = state.get_expr_ref(*consequence).clone();
+
+                let then_block = state.builder.create_block();
+                let end_block = state.builder.create_block();
+
+                let ty = state.resolve_concrete_ty(*ty, state.subst).clone();
+
+                state
+                    .builder
+                    .append_block_param(end_block, convert_type_to_cranelift_type(&ty));
+
+                let else_block_label = match else_block {
+                    Some(_) => Some(state.builder.create_block()),
+                    None => None,
+                };
+
+                let else_args = if else_block_label.is_none() {
+                    vec![
+                        state
+                            .builder
+                            .ins()
+                            .iconst(convert_type_to_cranelift_type(&ty), 0),
+                    ]
+                } else {
+                    vec![]
+                };
+
+                // 编译 scrutinee 值
+                let scrutinee_val = Self::compile_expr(state, &scrutinee_expr)?;
+
+                // 提取 tag（高 32 位）: (scrutinee >> 32)
+                let tag_val =
+                    state.builder.ins().ushr_imm(scrutinee_val, 32);
+
+                // 比较 tag 与预期 variant_index
+                let expected_tag_val = state.builder.ins().iconst(
+                    types::I64,
+                    variant_index as i64,
+                );
+                let comp_val = state.builder.ins().icmp(
+                    IntCC::Equal,
+                    tag_val,
+                    expected_tag_val,
+                );
+
+                state.builder.ins().brif(
+                    comp_val,
+                    then_block,
+                    &[],
+                    if let Some(it) = else_block_label {
+                        it
+                    } else {
+                        end_block
+                    },
+                    &else_args,
+                );
+
+                // then 块
+                state.builder.switch_to_block(then_block);
+
+                // 如果有绑定变量，从 payload 提取并存储
+                if !bindings.is_empty() {
+                    // payload = scrutinee & 0xFFFFFFFF
+                    let payload_val = state
+                        .builder
+                        .ins()
+                        .band_imm(scrutinee_val, 0x00000000FFFFFFFFu64 as i64);
+
+                    // 将 payload 值绑定到第一个变量
+                    if let Some(binding) = bindings.first() {
+                        let symbol = state.table.borrow_mut().define(&binding.value);
+                        let cranelift_ty = types::I64;
+                        state
+                            .builder
+                            .try_declare_var(
+                                Variable::from_u32(symbol.var_index as u32),
+                                cranelift_ty,
+                            )
+                            .map_err(|e| {
+                                format!("failed to declare variable '{}': {}", symbol.name, e)
+                            })?;
+                        state.builder.def_var(
+                            Variable::from_u32(symbol.var_index as u32),
+                            payload_val,
+                        );
+                    }
+                }
+
+                let val = Self::compile_expr(state, &consequence)?;
+                state.builder.ins().jump(end_block, &[val]);
+                state.builder.seal_block(then_block);
+
+                // else 块（如果存在）
                 if let Some(else_block_label) = else_block_label {
                     state.builder.switch_to_block(else_block_label);
                     let expr = state.get_expr_ref(else_block.unwrap()).clone();

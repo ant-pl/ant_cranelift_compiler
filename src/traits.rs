@@ -29,6 +29,7 @@ impl NeedGc for Ty {
             Ty::Function { .. } => false,
             Ty::AppliedGeneric(_, _) => true,
             Ty::Struct { .. } => true,
+            Ty::Enum { .. } => false, // enum 表示为 i64，不需要 GC 管理
             Ty::Ptr(_) => false,
             Ty::Infer(_) => false,
             Ty::InferInt(_) => false,

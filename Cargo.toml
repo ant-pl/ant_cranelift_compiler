@@ -20,7 +20,6 @@ ant_ast = { git = "https://github.com/ant-pl/TypedAnt.git", package = "ast" }
 ant_parser = { git = "https://github.com/ant-pl/TypedAnt.git", package = "parser" }
 ant_lexer = { git = "https://github.com/ant-pl/TypedAnt.git", package = "lexer" }
 ant_token = { git = "https://github.com/ant-pl/TypedAnt.git", package = "token" }
-
 # Cranelift dependencies for object file generation
 cranelift = "0.110.0"
 cranelift-module = "0.110.0"

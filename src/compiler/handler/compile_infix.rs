@@ -183,6 +183,18 @@ pub fn compile_infix(
                 Ok(op_func(state, lval, rval))
             }
 
+            (Ty::Enum { .. }, Ty::Enum { .. }) => {
+                type OpFunc = fn(&mut FunctionState<'_, '_>, Value, Value) -> Value;
+
+                let op_func: OpFunc = match op {
+                    "==" => cmp!(IntCC::Equal),
+                    "!=" => cmp!(IntCC::NotEqual),
+                    _ => todo!("todo op {op}"),
+                };
+
+                Ok(op_func(state, lval, rval))
+            }
+
             (lty, rty) => todo!("impl {lty} {op} {rty}"),
         }
     };
