@@ -395,7 +395,7 @@ pub fn build_linker_args(
             .arg(linker_config.library_flag.as_str())
             .arg("arc");
 
-        // 🆕 Clang 特定标志
+        // Clang 特定标志
         if is_clang {
             add_clang_specific_flags(command);
         }
