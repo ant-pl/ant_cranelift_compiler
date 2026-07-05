@@ -105,10 +105,13 @@ fn compile_call_generic(
             || Err(format!("generic function `{name}` not in generic map")),
             |it| Ok(it),
         )?
-        .clone()
     else {
         return Err(format!("`{name}` is not a generic function"));
     };
+
+    let all_params = all_params.clone();
+    let block = block.clone();
+    let ret_ty = *ret_ty;
 
     let arg_tyids = args
         .iter()
@@ -187,7 +190,6 @@ fn compile_call_generic(
     let block = block.clone();
 
     let concrete_param_ty_ids = concrete_param_types
-        .clone()
         .into_iter()
         .map(|(name, ty)| (name, state.tcx().alloc(ty)))
         .collect::<Vec<_>>();
