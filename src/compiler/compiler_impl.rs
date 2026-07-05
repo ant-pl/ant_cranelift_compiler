@@ -332,20 +332,16 @@ impl<'a> Compiler<'a> {
                                 unreachable!()
                             };
 
-                            let param_names = params
-                                .iter()
-                                .map(|it| {
-                                    let it = state.get_expr_ref(*it);
+                            let param_names = params.iter().map(|it| {
+                                let it = state.get_expr_ref(*it);
 
-                                    let TypedExpression::TypeHint(it, _, _) = it else {
-                                        unreachable!()
-                                    };
-                                    it.value.clone()
-                                })
-                                .collect::<Vec<Arc<str>>>();
+                                let TypedExpression::TypeHint(it, _, _) = it else {
+                                    unreachable!()
+                                };
+                                it.value.clone()
+                            });
 
                             let all_params = param_names
-                                .iter()
                                 .zip(params_type)
                                 .map(|(name, id)| (name.clone(), id))
                                 .collect();
@@ -572,7 +568,7 @@ impl<'a> Compiler<'a> {
                             .map(|(name, val_ty)| {
                                 (name.clone(), state.tcx_ref().get(*val_ty).clone())
                             })
-                            .collect::<Vec<(Arc<str>, Ty)>>(),
+                            .collect::<Vec<_>>(),
                     )?;
 
                     state.table.borrow_mut().define_struct_type(name, layout);
@@ -858,7 +854,7 @@ impl<'a> Compiler<'a> {
                             .map(|(name, val_ty)| {
                                 (name.clone(), state.tcx_ref().get(*val_ty).clone())
                             })
-                            .collect::<Vec<(Arc<str>, Ty)>>(),
+                            .collect::<Vec<_>>(),
                     )?;
 
                     state.table.borrow_mut().define_struct_type(name, layout);
@@ -1586,20 +1582,16 @@ impl<'a> Compiler<'a> {
 
                     // 1. 检查是否为泛型
                     if !generics.is_empty() {
-                        let param_names = params
-                            .iter()
-                            .map(|it| {
-                                let it = state.get_expr_ref(*it);
+                        let param_names = params.iter().map(|it| {
+                            let it = state.get_expr_ref(*it);
 
-                                let TypedExpression::TypeHint(it, _, _) = it else {
-                                    unreachable!()
-                                };
-                                it.value.clone()
-                            })
-                            .collect::<Vec<Arc<str>>>();
+                            let TypedExpression::TypeHint(it, _, _) = it else {
+                                unreachable!()
+                            };
+                            it.value.clone()
+                        });
 
                         let all_params = param_names
-                            .iter()
                             .zip(params_type)
                             .map(|(name, id)| (name.clone(), *id))
                             .collect();
@@ -1673,7 +1665,8 @@ impl<'a> Compiler<'a> {
                                     unreachable!()
                                 }
                             })
-                            .collect(),
+                            .collect::<Vec<_>>()
+                            .as_slice(),
                         block_ast.get_type(),
                         &block_ast,
                         name,
@@ -1879,7 +1872,7 @@ impl<'a> Compiler<'a> {
 
             TypedExpression::Prefix { op, right, ty, .. } => {
                 if op.as_ref() == "*" {
-                    // 1. 编译右侧表达式，得到指针的地址值
+                    // 编译右侧表达式，得到指针的地址值
                     let ptr_val = Self::compile_expr(state, &state.get_expr_ref(*right).clone())?;
 
                     // 获取目标类型 (即指针指向的类型)
@@ -1887,13 +1880,22 @@ impl<'a> Compiler<'a> {
                     let target_ty = state.resolve_concrete_ty(*ty, state.subst);
                     let cranelift_ty = convert_type_to_cranelift_type(&target_ty);
 
-                    // 3. 执行 load 操作
+                    // 执行 load 操作
                     return Ok(state.builder.ins().load(
                         cranelift_ty,    // 读取出来的数据类型
                         MemFlags::new(), // 内存标记
                         ptr_val,         // 地址 Value
                         0,               // 偏移量（通常为 0）
                     ));
+                } else if op.as_ref() == "!" {
+                    let val = Self::compile_expr(state, &state.get_expr_ref(*right).clone())?;
+
+                    // 我们假定在 TypeChecker 阶段已检查取反对象为布尔值
+                    // 并且在 convert_type_to_cranelift_type 函数我们将布尔值类型设定为 i8
+                    // 故 false_val 为 0i8
+                    let false_val = state.builder.ins().iconst(types::I8, 0);
+
+                    return Ok(state.builder.ins().icmp(IntCC::Equal, val, false_val));
                 }
 
                 todo!("todo op {op}")
@@ -1977,7 +1979,11 @@ impl<'a> Compiler<'a> {
                     compile_function(
                         state,
                         signature,
-                        &all_params.iter().map(|(n, id)| (n.clone(), *id)).collect(), // 这里可能需要根据 Subst 转换后的 ID
+                        &all_params
+                            .iter()
+                            .map(|(n, id)| (n.clone(), *id))
+                            .collect::<Vec<_>>()
+                            .as_slice(), // 这里可能需要根据 Subst 转换后的 ID
                         *func_ret_type,
                         &block,
                         &mangled_name,
@@ -2332,7 +2338,11 @@ mod tests {
     };
     use ant_typed_module::{module::TypedModule, ty_context::TypeContext};
 
-    use crate::{args::read_arg, compiler::{Compiler, compile_to_executable, create_target_isa, table::SymbolTable}, link_utils::{TargetTriple, get_target_triple_or_default}};
+    use crate::{
+        args::read_arg,
+        compiler::{Compiler, compile_to_executable, create_target_isa, table::SymbolTable},
+        link_utils::{TargetTriple, get_target_triple_or_default},
+    };
 
     #[test]
     fn simple_program() {
