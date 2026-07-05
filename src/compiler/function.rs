@@ -39,7 +39,7 @@ pub fn compile_function(
     state: &mut FunctionState,
 
     signature: Signature,
-    params: &Vec<(Arc<str>, TyId)>,
+    params: &[(Arc<str>, TyId)],
     ret_ty: TyId,
 
     block_ast: &TypedExpression,
