@@ -84,7 +84,7 @@ fn compile(arg: Args) {
 
     let mut checker = TypeChecker::new(&mut typed_module, &mut name_resolver);
 
-    let typed_program = match checker.check_all(program) {
+    let typed_program = match checker.check_all(program, None) {
         Ok(it) => it,
         Err(err) => {
             eprintln!("{err:#?}");

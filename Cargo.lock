@@ -67,7 +67,7 @@ dependencies = [
 [[package]]
 name = "ant_crate_def"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ast",
  "id",
@@ -109,9 +109,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.102"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
+checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
 
 [[package]]
 name = "arbitrary"
@@ -122,7 +122,7 @@ checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 [[package]]
 name = "ast"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "bigdecimal",
  "indexmap",
@@ -162,9 +162,9 @@ checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
 name = "cc"
-version = "1.2.65"
+version = "1.2.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e228eec9be7c17ccb640b59b36a5cd805ea2a564a4c5e162c2f659fea30d3b96"
+checksum = "f5d6cac793997bd970000024b2934968efe83b382de4fdcf4fcb46b6ee4ad996"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -478,7 +478,7 @@ checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 [[package]]
 name = "id"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 
 [[package]]
 name = "indexmap"
@@ -499,7 +499,7 @@ checksum = "a6cb138bb79a146c1bd460005623e142ef0181e3d0219cb493e02f7d08a35695"
 [[package]]
 name = "lexer"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "colored",
  "token",
@@ -540,7 +540,7 @@ checksum = "88904434abc2901f197fe8cc55f0445e7ded921dba5911dad2e2b39b48e663c4"
 [[package]]
 name = "name_resolver"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ant_crate_def",
  "ast",
@@ -556,9 +556,9 @@ dependencies = [
 
 [[package]]
 name = "num-bigint"
-version = "0.4.6"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5e44f723f1133c9deac646763579fdb3ac745e418f2a7af9cd0c431da1f20b9"
+checksum = "c89e69e7e0f03bea5ef08013795c25018e101932225a656383bd384495ecc367"
 dependencies = [
  "num-integer",
  "num-traits",
@@ -631,7 +631,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 [[package]]
 name = "parser"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ast",
  "bigdecimal",
@@ -705,9 +705,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "dfbc457d0c7a0759a614551b11a6409e5951f6c7537be1f1b7682b9ae9230368"
 dependencies = [
  "proc-macro2",
 ]
@@ -854,7 +854,7 @@ dependencies = [
 [[package]]
 name = "token"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "phf",
 ]
@@ -892,7 +892,7 @@ dependencies = [
 [[package]]
 name = "ty"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ast",
  "indexmap",
@@ -901,7 +901,7 @@ dependencies = [
 [[package]]
 name = "type_checker"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ant_crate_def",
  "ast",
@@ -919,7 +919,7 @@ dependencies = [
 [[package]]
 name = "typed_ast"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ast",
  "bigdecimal",
@@ -932,7 +932,7 @@ dependencies = [
 [[package]]
 name = "typed_module"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 dependencies = [
  "ast",
  "id",
@@ -962,7 +962,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 [[package]]
 name = "utils"
 version = "0.1.0"
-source = "git+https://github.com/ant-pl/TypedAnt.git#16fe5f7ad6e440083102138f7c8806677d2e0cd2"
+source = "git+https://github.com/ant-pl/TypedAnt.git#cbe273c61c097fca71d8a09470c53a4cf0fe8168"
 
 [[package]]
 name = "version_check"

@@ -2393,7 +2393,7 @@ mod tests {
 
         let checker = &mut TypeChecker::new(&mut module, &mut name_resolver);
 
-        let typed_node = checker.check_all(node).unwrap();
+        let typed_node = checker.check_all(node, None).unwrap();
 
         let constraints = checker.get_constraints().to_vec();
 
